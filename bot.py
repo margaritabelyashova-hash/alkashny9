@@ -1,42 +1,31 @@
+# bot.py — compatible with python-telegram-bot 20.7
 import os
-import asyncio
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    ContextTypes,
-    CommandHandler,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = os.getenv("ADMIN_ID")
 
+# safety checks
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN is not set in environment variables")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Бот работает на Render 🚀")
+    await update.message.reply_text("Привет! Я твой бот для расписания сомелье.")
 
+async def schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Здесь будет расписание сомелье.")
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(update.message.text)
+def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("schedule", schedule))
 
-async def main():
-    application = (
-        ApplicationBuilder()
-        .token(BOT_TOKEN)
-        .build()
-    )
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling()
-    await application.updater.idle()
-
+    # run polling (blocking)
+    app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
